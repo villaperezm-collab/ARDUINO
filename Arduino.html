@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitor ESP32 - GitHub</title>
+  <style>
+    body { font-family: sans-serif; background: #0f2027; color: #fff; text-align: center; padding: 40px; }
+    .card { background: #203a43; padding: 20px; margin: 10px; border-radius: 10px; display: inline-block; min-width: 180px; }
+    .value { font-size: 2em; font-weight: bold; color: #2ecc71; }
+    input { padding: 8px; margin: 10px; width: 250px; }
+    button { padding: 8px 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>📡 Monitor Remoto ESP32</h1>
+  <p>Ingresa la IP de tu ESP32:</p>
+  <input id="ip" placeholder="192.168.x.x" value="192.168.43.1">
+  <button onclick="guardar()">Conectar</button>
+  <button onclick="leer()">🔄 Leer ahora</button>
+
+  <div style="margin-top:30px;">
+    <div class="card"><div>🌡️ Temperatura</div><div class="value"><span id="t">--</span> °C</div></div>
+    <div class="card"><div>💧 Humedad</div><div class="value"><span id="h">--</span> %</div></div>
+    <div class="card"><div>📏 Distancia</div><div class="value"><span id="d">--</span> cm</div></div>
+  </div>
+  <p id="estado" style="margin-top:20px; opacity:0.7;"></p>
+
+  <script>
+    function guardar() {
+      localStorage.setItem('esp_ip', document.getElementById('ip').value);
+      leer();
+    }
+    async function leer() {
+      const ip = localStorage.getItem('esp_ip') || document.getElementById('ip').value;
+      try {
+        const r = await fetch('http://' + ip + '/sensores');
+        const d = await r.json();
+        document.getElementById('t').textContent = d.temperatura.toFixed(1);
+        document.getElementById('h').textContent = d.humedad.toFixed(1);
+        document.getElementById('d').textContent = d.distancia.toFixed(1);
+        document.getElementById('estado').textContent = '✅ Conectado a ' + ip;
+      } catch(e) {
+        document.getElementById('estado').textContent = '❌ No se pudo conectar. ¿Está el ESP32 encendido?';
+      }
+    }
+    window.onload = () => {
+      const ip = localStorage.getItem('esp_ip');
+      if (ip) document.getElementById('ip').value = ip;
+      leer();
+      setInterval(leer, 3000);
+    };
+  </script>
+</body>
+</html>
